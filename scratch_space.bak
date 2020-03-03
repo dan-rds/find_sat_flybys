@@ -1,0 +1,28 @@
+from spacetrack import SpaceTrackClient
+import datetime as dt 
+st = SpaceTrackClient('ddrichar@ucsc.edu', 'n3JYvGMWBb3Yv3e')
+
+
+import spacetrack.operators as op
+drange = op.inclusive_range(dt.datetime(2016, 6, 26),
+							dt.datetime(2016, 6, 27))
+
+# Streaming downloads line by line
+lines = st.tle(iter_lines=True, epoch=drange, orderby='TLE_LINE1', format='3le')
+with open('tle.txt', 'w') as fp:
+	for line in lines:
+		fp.write(line)
+		fp.write("\n")
+
+
+# Parameter checking, using Space-Track's modeldef API
+#xst.tle_latest(norad_cat_id=25544)
+#TypeError: 'tle_latest' got an unexpected argument 'onrad_cat_id'
+
+# # Automatic rate limiting
+# for satno in my_satnos:
+# 	# Gets limited to <20 requests per minute automatically by blocking
+# 	st.tle()
+
+
+curl --limit-rate 1M --cookie cookies.txt https://www.space-track.org/basicspacedata/query/class/boxscore > boxscore.json
