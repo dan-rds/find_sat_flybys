@@ -136,25 +136,29 @@ calc_min_dist_to_beam_in_window(d, end, iss, observatory, settings_dict)
 
 
 
-# tles_to_search = []
-# never_up_count = 0
-# means = []
-# for name, tle in tles.items():
-# 	sat = ephem.readtle(name, tle[0], tle[1])
-# 	sat.compute(observatory)
+tles_to_search = []
+never_up_count = 0
+means = []
+i = 0
+for name, tle in tles.items():
+	sat = ephem.readtle(name, tle[0], tle[1])
+	sat.compute(observatory)
+	i  += 1
+	if not i%10:
+		print(i)
 
-# 	means.append(sat._n)
-# 	try: # Don't add satellites that are never up 
-# 		start_val = observatory.next_pass(sat)
-# 		#print(datetime.datetime.(start_val[0]))
-# 		print(start_val[0])
-# 		tles_to_search.append(sat)
-# 	except ValueError:
-# 		never_up_count += 1
+	try: # Don't add satellites that are never up 
+		start_val = observatory.next_pass(sat)
+		#print(datetime.datetime.(start_val[0]))
+		min_dist  = calc_min_dist_to_beam_in_window(d, end, sat, observatory, settings_dict)
+		means.append(min_dist)
+		# tles_to_search.append(sat)
+	except ValueError:
+		never_up_count += 1
 		
-# print(never_up_count, " of the ", len(tles), " satellites never come into view")
-# means.sort()
-# print(means)
+print(never_up_count, " of the ", len(tles), " satellites never come into view")
+means.sort(key = lambda x: x[0])
+print(means)
 
 # calc_ms_to_transit_beam(observatory, settings_dict,iss)
 
