@@ -143,9 +143,9 @@ i = 0
 for name, tle in tles.items():
 	sat = ephem.readtle(name, tle[0], tle[1])
 	sat.compute(observatory)
-	i  += 1
-	if not i%10:
-		print(i)
+	# i  += 1
+	# if not i%10:
+	# 	print(i)
 
 	try: # Don't add satellites that are never up 
 		start_val = observatory.next_pass(sat)
