@@ -5,7 +5,7 @@ messin_with_tles
 
 
     by Daniel Richards (github.com/dan-rds)
-    Copyright © 2020 Daniel Richards. All rights reserved.
+    Copyright 2020 Daniel Richards. All rights reserved.
 -------------------------------------- 
 '''
 import ephem
@@ -14,10 +14,13 @@ import time
 import datetime
 import pyproj
 import math
+
+
 # TODO use from blimpy.ephemeris import Observatory 
 
 from pprint import pprint
 import inspect
+
 def peek(x):
 	pprint(inspect.getmembers(x))
 
@@ -95,18 +98,18 @@ def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, obs_
 	while t < end_date:
 		observatory.date = t
 		sat.compute(observatory)
-	#	peek(sat)
-		sat_alt = sat.alt
-		sat_az = sat.az
+		
+		sat_ra = sat.ra
+		sat_dec = sat.dec
 
 
-		source_az = obs_settings['source_az']
-		source_alt= obs_settings['source_alt']
+		target_ra = obs_settings['target_ra']
+		target_dec= obs_settings['target_dec']
 
-		az_diff = sat_az - source_az
-		alt_diff = sat_alt - source_alt
-		#print(az_diff, alt_diff, type(az_diff))
-		angular_dist = math.sqrt(az_diff**2+alt_diff**2)
+		ra_diff = sat_ra - target_ra
+		dec_diff = sat_dec - target_dec
+		#print(ra_diff, dec_diff, type(ra_diff))
+		angular_dist = math.sqrt(ra_diff**2+dec_diff**2)
 	
 		min_dist = (angular_dist, t) if angular_dist < min_dist[0] else min_dist
 
@@ -117,63 +120,48 @@ def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, obs_
 
 
 
-# TODO check tle "('neverup', False),"
 
-observatory, settings_dict = read_config_file('config.yaml')
-tles = read_tle_file()
-mins = 12
-obs_window_ms = mins*1000*mins #TODO, not hardcoded, 12 minutes
-settings_dict['source_az'] = 0.0
-settings_dict['source_alt'] = 0.0
-iss_tle = tles["ISS (ZARYA)"]
-iss = ephem.readtle("ISS (ZARYA)", iss_tle[0], iss_tle[1])
-peek(observatory)
-d = datetime.datetime.utcnow()
-observatory.date =  ephem.Date(d)
+def run(config_filename, start_time_utc, duration_ms, target_ra, target_dec, verbose):
+	observatory, settings_dict = read_config_file(config_filename)
+	print(config_filename, start_time_utc, duration_ms, target_ra, target_dec, verbose)
 
-end = d + datetime.timedelta(minutes=12) 
-calc_min_dist_to_beam_in_window(d, end, iss, observatory, settings_dict)
+	settings_dict['target_ra'] = target_ra
+	settings_dict['target_dec'] = target_dec
 
 
+	# peek(observatory)
+	
+	observatory.date =  ephem.Date(start_time_utc)
 
-tles_to_search = []
-never_up_count = 0
-means = []
-i = 0
-for name, tle in tles.items():
-	sat = ephem.readtle(name, tle[0], tle[1])
-	sat.compute(observatory)
-	# i  += 1
-	# if not i%10:
-	# 	print(i)
+	end = start_time_utc + datetime.timedelta(milliseconds=duration_ms) 
+	#calc_min_dist_to_beam_in_window(d, end, iss, observatory, settings_dict)
+	tles = read_tle_file()
 
-	try: # Don't add satellites that are never up 
-		start_val = observatory.next_pass(sat)
-		#print(datetime.datetime.(start_val[0]))
-		min_dist  = calc_min_dist_to_beam_in_window(d, end, sat, observatory, settings_dict)
-		means.append(min_dist)
-		# tles_to_search.append(sat)
-	except ValueError:
-		never_up_count += 1
+
+	tles_to_search = []
+	never_up_count = 0
+	means = []
+	i = 0
+	for name, tle in tles.items():
+		sat = ephem.readtle(name, tle[0], tle[1])
+		sat.compute(observatory)
+		i  += 1
+		if not i%100:
+			print(i)
 		
-print(never_up_count, " of the ", len(tles), " satellites never come into view")
-means.sort(key = lambda x: x[0])
-print(means)
 
-# calc_ms_to_transit_beam(observatory, settings_dict,iss)
+		try: # Don't add satellites that are never up 
+			start_val = observatory.next_pass(sat)
+			#print(datetime.datetime.(start_val[0]))
+			min_dist  = calc_min_dist_to_beam_in_window(start_time_utc, end, sat, observatory, settings_dict)
+			means.append(min_dist)
+			# tles_to_search.append(sat)
+		except ValueError:
+			never_up_count += 1
+			
+	print(never_up_count, " of the ", len(tles), " satellites never come into view")
+	means.sort(key = lambda x: x[0])
+	print(means)
 
-# for i in range(obs_window_ms//1000):
-# 	d = datetime.datetime.utcfromtimestamp(t+i)
-# 	ephem_date = ephem.Date(d)
-# 	observatory.date = ephem_date
 
-# 	iss.compute(observatory)
-# 	print(iss.ra, iss.dec)
-
-
-# mean_motions = []
-# for k, v in tles.items():
-# 	sat = ephem.readtle(k, v[0], v[1])
-# 	mean_motions.append(sat._e)
-# mean_motions.sort()
 # print(mean_motions)

@@ -7,8 +7,9 @@
 - ~~brute force all tles in obs window~~
 
 Buildout script functionality:
-- getopt
-- config file reading and error messages
+- ~~ getopt ~~
+- ~~ convert engligh times to ms (12m -> 720000) ~~
+- ~~config file reading ~~ and error messages 
 - requirements.txt or setup.py
 
 Cleanup:
@@ -24,4 +25,4 @@ Speedup:
 
 ## Progress:
 3/4/2020: Running `$ time pos_calc.py` yields `user	0m12.801s`. Much faster than previous iteration, simply checking the `ephem.Body.next_rising` field
-
+	Arg parser workin like a dream
