@@ -26,3 +26,20 @@ with open('tle.txt', 'w') as fp:
 
 
 curl --limit-rate 1M --cookie cookies.txt https://www.space-track.org/basicspacedata/query/class/boxscore > boxscore.json
+def read_config_file(config_filename) -> (ephem.Observer, dict):
+# 	d = {}
+# 	with open(config_filename, "r+") as config:
+# 		d = dict(yaml.safe_load(config))
+# 	# converting xyz -> lla
+# 	ecef = pyproj.Proj(proj='geocent', ellps='WGS84', datum='WGS84')
+# 	lla = pyproj.Proj(proj='latlong', ellps='WGS84', datum='WGS84')
+# 	lon, lat, alt = pyproj.transform(ecef, lla, d['x'], d['y'], d['z'], radians=True) # Yes it returs lon, lat not la, lon
+# 	ret_obs = ephem.Observer()
+# 	ret_obs.lat = lat
+# 	ret_obs.lon = lon
+# 	ret_obs.elevation = alt
+
+# 	d[lon] = lon
+# 	d[lat] = lat
+# 	d[alt] = alt
+# 	return ret_obs, d

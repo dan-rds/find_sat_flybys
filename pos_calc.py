@@ -14,12 +14,19 @@ import time
 import datetime
 import pyproj
 import math
-
-
+from observatory import Observatory
 # TODO use from blimpy.ephemeris import Observatory 
-
 from pprint import pprint
 import inspect
+
+verbose = False
+
+def verbose_conditional_print(s):
+	""" The ultimate example of 'self documenting code' """
+	global verbose
+	if verbose:
+		print(s)
+
 
 def peek(x):
 	pprint(inspect.getmembers(x))
@@ -40,23 +47,6 @@ def read_tle_file() -> dict:
 
 	return tles_dict
 
-def read_config_file(config_filename) -> (ephem.Observer, dict):
-	d = {}
-	with open(config_filename, "r+") as config:
-		d = dict(yaml.safe_load(config))
-	# converting xyz -> lla
-	ecef = pyproj.Proj(proj='geocent', ellps='WGS84', datum='WGS84')
-	lla = pyproj.Proj(proj='latlong', ellps='WGS84', datum='WGS84')
-	lon, lat, alt = pyproj.transform(ecef, lla, d['x'], d['y'], d['z'], radians=True) # Yes it returs lon, lat not la, lon
-	ret_obs = ephem.Observer()
-	ret_obs.lat = lat
-	ret_obs.lon = lon
-	ret_obs.elevation = alt
-
-	d[lon] = lon
-	d[lat] = lat
-	d[alt] = alt
-	return ret_obs, d
 
 def calc_ms_to_transit_beam(observatory, obs_settings, sat_tle):
 
@@ -86,15 +76,12 @@ def calc_ms_to_transit_beam(observatory, obs_settings, sat_tle):
 	arcmin_per_ms = degrees*60
 	return arcmin_per_ms
 
-def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, obs_settings) -> (float, datetime.datetime):
+def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, target) -> (float, datetime.datetime):
 	obs = observatory.copy()
 	t = start_date
 	dt = datetime.timedelta(seconds=1) 
 	min_dist = (float("inf"), None)
-	# try:
-	# 	sat.compute(observatory)
-	# 	end_date = min(end_date, observatory.next_setting())
-	# except ValueError
+
 	while t < end_date:
 		observatory.date = t
 		sat.compute(observatory)
@@ -103,8 +90,8 @@ def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, obs_
 		sat_dec = sat.dec
 
 
-		target_ra = obs_settings['target_ra']
-		target_dec= obs_settings['target_dec']
+		target_ra = target['ra']
+		target_dec= target['dec']
 
 		ra_diff = sat_ra - target_ra
 		dec_diff = sat_dec - target_dec
@@ -113,47 +100,50 @@ def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, obs_
 	
 		min_dist = (angular_dist, t) if angular_dist < min_dist[0] else min_dist
 
-		t = t+dt
+		t = t + dt
 	return min_dist
 
+def run(config_filename, start_time_utc, duration_ms, target_ra, target_dec, v_flag):
+	global verbose
+	"""
+	Function find if a satellite comes in between telescope and target during planned observation
 
+	Args: (all arguments should be checked in parser)
+		config_filename (str): config file name (yaml)
+		start_time_utc (datetime.datetime): start of observation or target
+		duration_ms (float): how long target will be observed
+		target_ra (float): Right ascension of target (radians) 
+		target_dec float): Declination of target (radians) 
+		v_flag (bool): verbosity flag
+	"""
 
+	verbose = v_flag
+	observatory = Observatory(config_filename)
+	verbose_conditional_print(observatory)
 
-
-
-def run(config_filename, start_time_utc, duration_ms, target_ra, target_dec, verbose):
-	observatory, settings_dict = read_config_file(config_filename)
-	print(config_filename, start_time_utc, duration_ms, target_ra, target_dec, verbose)
-
-	settings_dict['target_ra'] = target_ra
-	settings_dict['target_dec'] = target_dec
-
-
-	# peek(observatory)
+	target = (target_ra, target_dec)
 	
 	observatory.date =  ephem.Date(start_time_utc)
 
 	end = start_time_utc + datetime.timedelta(milliseconds=duration_ms) 
-	#calc_min_dist_to_beam_in_window(d, end, iss, observatory, settings_dict)
-	tles = read_tle_file()
 
-
-	tles_to_search = []
-	never_up_count = 0
-	means = []
-	i = 0
-	for name, tle in tles.items():
+	tles_dict = read_tle_file()
+	# tles_to_search = []
+	# never_up_count = 0
+	# means = []
+	# i = 0
+	for name, tle in tles_dict.items():
 		sat = ephem.readtle(name, tle[0], tle[1])
 		sat.compute(observatory)
-		i  += 1
-		if not i%100:
-			print(i)
+		# i  += 1
+		# if not i%100:
+		# 	print(i)
 		
 
 		try: # Don't add satellites that are never up 
 			start_val = observatory.next_pass(sat)
 			#print(datetime.datetime.(start_val[0]))
-			min_dist  = calc_min_dist_to_beam_in_window(start_time_utc, end, sat, observatory, settings_dict)
+			min_dist  = calc_min_dist_to_beam_in_window(start_time_utc, end, sat, observatory, target)
 			means.append(min_dist)
 			# tles_to_search.append(sat)
 		except ValueError:
