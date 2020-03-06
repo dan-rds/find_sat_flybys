@@ -14,17 +14,17 @@ Buildout script functionality:
 - use update tle
 
 Cleanup:
-- Extend ephem.observer to allow for other params e.i. beam-width and buffer zone (sidelobes??)
+- ~~Extend ephem.observer to allow for other params~~ 
+- Figure out hat to do w/ beam-width and buffer zone (sidelobes??)
 - Write a better readme
 - rename repo
-- Proper docstrings
+- ~~Proper docstrings~~
 
 Speedup:
 - Peak-trough-incline-decline algorithm naive 
 - PTID algorithm edge cases where obs window is longer than orbit
 - Look into caching 
 - Think about multipe targets in single run (cost effective??)
-
 
 ## Progress:
 3/4/2020: 

@@ -15,6 +15,8 @@ import inspect
 import ephem
 from observatory import Observatory
 
+import ptid
+
 
 verbose = False
 
@@ -27,7 +29,7 @@ def verbose_conditional_print(s):
 
 
 def peek(x):
-    """ quick peek helper util """
+    """ quick helper util to know wtf is happening with these ephem objects"""
     pprint(inspect.getmembers(x))
 
 
@@ -45,6 +47,8 @@ def read_tle_file() -> dict:
         line3 = f.readline().strip()
 
     return tles_dict
+
+
 
 
 def run(config_filename, start_time_utc,
@@ -70,8 +74,8 @@ def run(config_filename, start_time_utc,
 
     observatory.date = ephem.Date(start_time_utc)
 
-    end = start_time_utc + datetime.timedelta(milliseconds=duration_ms)
-
+    #end = start_time_utc + datetime.timedelta(milliseconds=duration_ms)
+    end = start_time_utc + datetime.timedelta(milliseconds=2)
     tles_dict = read_tle_file()
     # tles_to_search = []
     never_up_count = 0
@@ -85,10 +89,11 @@ def run(config_filename, start_time_utc,
         sat_ever_rises = False
         try:  # Don't add satellites that are never up
             start_val = observatory.next_pass(sat)
-            print(start_val)
+            ptid.ptid(observatory, sat, target, start_time_utc, end)
             #m=calc_min_dist_to_beam_in_window(start_time_utc, end, sat, observatory, target)
         except ValueError:
             never_up_count += 1
+        break
 
     print(never_up_count, " of the ", len(tles),
           " satellites never come into view")
