@@ -27,6 +27,10 @@ def verbose_conditional_print(s):
     if verbose:
         print(s)
 
+def vcp(s):
+    """ I'm exceptionally lazy """
+    verbose_conditional_print(s)
+
 
 def peek(x):
     """ quick helper util to know wtf is happening with these ephem objects"""
@@ -48,7 +52,21 @@ def read_tle_file() -> dict:
 
     return tles_dict
 
+def kludge_ra_to_aa(observatory, target):
+    ra, dec = target
+    from astropy.coordinates import EarthLocation,SkyCoord
+    from astropy.time import Time
+    from astropy import units as u
+    from astropy.coordinates import AltAz
 
+    observing_location = EarthLocation(lat=str(observatory.lat), lon=str(observatory.lon), height=observatory.elevation)
+    observing_time = Time(datetime.datetime.now())  
+    aa = AltAz(location=observing_location, obstime=observing_time)
+
+    coord = SkyCoord(ra=ra, dec=dec,  unit=(u.radian, u.radian))
+    coord.transform_to(aa)
+    
+    return coord
 
 
 def run(config_filename, start_time_utc,
@@ -66,18 +84,25 @@ def run(config_filename, start_time_utc,
         v_flag (bool): verbosity flag
     """
 
+    # start_time_utc = datetime.datetime.fromtimestamp(1583555291.286727)
     verbose = v_flag
     observatory = Observatory(config_filename)
     verbose_conditional_print(observatory)
-    peek(observatory)
-    target = (target_ra, target_dec)
+
+    target = (target_ra, target_dec) # TODO convert to azalt
+    target_body = ephem.FixedBody()
+    target_body._ra= target_ra
+    target_body._dec = target_dec 
+    
 
     observatory.date = ephem.Date(start_time_utc)
-
+    print(ephem.Date(start_time_utc), "_________________________________")
     #end = start_time_utc + datetime.timedelta(milliseconds=duration_ms)
-    end = start_time_utc + datetime.timedelta(milliseconds=2)
+    end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
     tles_dict = read_tle_file()
     # tles_to_search = []
+    target_body.compute(observatory)
+    peek(target_body)
     never_up_count = 0
     #means = []
 
@@ -89,11 +114,10 @@ def run(config_filename, start_time_utc,
         sat_ever_rises = False
         try:  # Don't add satellites that are never up
             start_val = observatory.next_pass(sat)
-            ptid.ptid(observatory, sat, target, start_time_utc, end)
-            #m=calc_min_dist_to_beam_in_window(start_time_utc, end, sat, observatory, target)
+            ptid.ptid(observatory, sat, target, start_time_utc, end, target_aa)
         except ValueError:
             never_up_count += 1
         break
 
-    print(never_up_count, " of the ", len(tles),
-          " satellites never come into view")
+    #print(never_up_count, " of the ", len(tles),
+     #     " satellites never come into view")
