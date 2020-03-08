@@ -88,6 +88,8 @@ if __name__ == '__main__':
 	parser.add_argument("-f", "--config_file", type=str, action="store", dest='config_filename', required=True,
 	                    help="Outout filename for writing the results.")
 
+	parser.add_argument("-r", "--radius", type=float, action="store", dest='beam_radius', default=1.0,
+	                    help="Radius of the beam for this observation in arcminutes.")
 	args = parser.parse_args().__dict__
 
 	verbose = args["verbose"]

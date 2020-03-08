@@ -52,25 +52,40 @@ def read_tle_file() -> dict:
 
     return tles_dict
 
-def kludge_ra_to_aa(observatory, target):
-    ra, dec = target
-    from astropy.coordinates import EarthLocation,SkyCoord
-    from astropy.time import Time
-    from astropy import units as u
-    from astropy.coordinates import AltAz
+# def kludge_ra_to_aa(observatory, target):
+#     ra, dec = target
+#     from astropy.coordinates import EarthLocation,SkyCoord
+#     from astropy.time import Time
+#     from astropy import units as u
+#     from astropy.coordinates import AltAz
 
-    observing_location = EarthLocation(lat=str(observatory.lat), lon=str(observatory.lon), height=observatory.elevation)
-    observing_time = Time(datetime.datetime.now())  
-    aa = AltAz(location=observing_location, obstime=observing_time)
+#     observing_location = EarthLocation(lat=str(observatory.lat), lon=str(observatory.lon), height=observatory.elevation)
+#     observing_time = Time(datetime.datetime.now())  
+#     aa = AltAz(location=observing_location, obstime=observing_time)
 
-    coord = SkyCoord(ra=ra, dec=dec,  unit=(u.radian, u.radian))
-    coord.transform_to(aa)
+#     coord = SkyCoord(ra=ra, dec=dec,  unit=(u.radian, u.radian))
+#     coord.transform_to(aa)
     
-    return coord
-
+#     return coord
+def create_target_position_series(observatory, start_time_utc, duration_ms, target_body) -> list:
+    series = []
+    # TODO, calc better time step size
+    start = start_time_utc
+    interested_keys = ['_dec','_ra','a_dec','a_epoch','a_ra','alt','az','dec','elong','neverup','ra',
+    'radius','rise_az','rise_time','set_az','set_time','transit_alt','transit_time',]
+    # TODO, calc better time step size
+    for ms in range(0, int(duration_ms)):
+        observatory.date = start + datetime.timedelta(milliseconds=ms)
+        target_body.compute(observatory)
+        peek(target_body)
+        d = {x: target_body.__getattribute__(x) for x in interested_keys}
+        d["ts"] = start + datetime.timedelta(milliseconds=ms)
+        series.append(d)
+    observatory.date = start_time_utc #cant be too careful
+    return series
 
 def run(config_filename, start_time_utc,
-        duration_ms, target_ra, target_dec, v_flag):
+        duration_ms, target_ra, target_dec, beam_radius, v_flag):
     global verbose
     """
     Function find if a satellite comes in between telescope and target during planned observation
@@ -84,7 +99,7 @@ def run(config_filename, start_time_utc,
         v_flag (bool): verbosity flag
     """
 
-    # start_time_utc = datetime.datetime.fromtimestamp(1583555291.286727)
+
     verbose = v_flag
     observatory = Observatory(config_filename)
     verbose_conditional_print(observatory)
@@ -93,16 +108,18 @@ def run(config_filename, start_time_utc,
     target_body = ephem.FixedBody()
     target_body._ra= target_ra
     target_body._dec = target_dec 
-    
+    vcp(target_body)
 
     observatory.date = ephem.Date(start_time_utc)
-    print(ephem.Date(start_time_utc), "_________________________________")
-    #end = start_time_utc + datetime.timedelta(milliseconds=duration_ms)
+    
+
     end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
     tles_dict = read_tle_file()
-    # tles_to_search = []
+
     target_body.compute(observatory)
-    peek(target_body)
+    target_series = create_target_position_series(observatory, start_time_utc, duration_ms, target_body)
+    print(target_series[0])
+
     never_up_count = 0
     #means = []
 
@@ -114,10 +131,9 @@ def run(config_filename, start_time_utc,
         sat_ever_rises = False
         try:  # Don't add satellites that are never up
             start_val = observatory.next_pass(sat)
-            ptid.ptid(observatory, sat, target, start_time_utc, end, target_aa)
+            closest_pass_dist = ptid.ptid(observatory, sat, target, start_time_utc, end, target_)
+            print("_____CLOSEST PASS DIST: ", closest_pass_dist)
         except ValueError:
             never_up_count += 1
         break
 
-    #print(never_up_count, " of the ", len(tles),
-     #     " satellites never come into view")
