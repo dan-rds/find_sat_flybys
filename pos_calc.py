@@ -52,21 +52,6 @@ def read_tle_file() -> dict:
 
     return tles_dict
 
-# def kludge_ra_to_aa(observatory, target):
-#     ra, dec = target
-#     from astropy.coordinates import EarthLocation,SkyCoord
-#     from astropy.time import Time
-#     from astropy import units as u
-#     from astropy.coordinates import AltAz
-
-#     observing_location = EarthLocation(lat=str(observatory.lat), lon=str(observatory.lon), height=observatory.elevation)
-#     observing_time = Time(datetime.datetime.now())  
-#     aa = AltAz(location=observing_location, obstime=observing_time)
-
-#     coord = SkyCoord(ra=ra, dec=dec,  unit=(u.radian, u.radian))
-#     coord.transform_to(aa)
-    
-#     return coord
 def create_target_position_series(observatory, start_time_utc, duration_ms, target_body) -> list:
     series = []
     # TODO, calc better time step size
