@@ -202,3 +202,36 @@ def get_points(observatory, sat, time, time_delta_ms):
 
 
     # return dist
+
+
+    def slope_check(observatory, sat, target_timeseries):
+    # put under ptid?
+    # TODO, check if precalcing sat is faster? shouldnt be tho
+    observatory = observatory
+
+    # left_sample = target_timeseries[0]
+    # right_sample = target_timeseries[-1]
+    
+    time = datetime.datetime.now()#left_sample['ts']
+    observatory.date = time
+    sat.compute(observatory)
+    tmp_time = observatory.date
+    sat_bb = (sat.alt, sat.az)
+
+    tmp = copy.copy(sat_bb)
+
+
+    #dist_sat_to_left_sample = distance(a_coord=sat_aa, b_coord=(0,0))
+    #obs = observatory.copy()
+    #obs = Observatory('config.yaml')
+    time += datetime.timedelta(minutes=20)#right_sample['ts']
+    observatory.date= time
+
+    sat.compute(observatory)
+    sat_aa = (sat.alt, sat.az)
+    #dist_sat_to_right_sample = distance(a_coord=sat_aa, b_coord=(0,0))
+    print(time)
+    print(tmp,sat_aa, sat_aa==tmp , "<-----")
+    print(tmp_time, observatory.date, tmp_time == time)
+    #print(dist_sat_to_left_sample, dist_sat_to_right_sample, dist_sat_to_right_sample-dist_sat_to_left_sample,dist_sat_to_left_sample < dist_sat_to_right_sample)
+    return "xyz"

@@ -3,14 +3,13 @@
 import ephem
 import math
 from math import pi
+import pylab as pl
 
 def distance(a_coord, b_coord) -> float:
-	# Don't adjust az
-
 	a_alt, a_az = a_coord
 	b_alt, b_az = b_coord
 
-	if a_az < 0 or b_az < 0:
+	if a_az < 0 or b_az < 0: 
 		raise ValueError
 	if abs(a_alt) > pi or abs(b_alt) > pi:
 		raise ValueError
@@ -27,5 +26,10 @@ def distance(a_coord, b_coord) -> float:
 
 a = (3, 3)
 b = (pi, pi)
+alt_list = [float(x) for x in pl.frange(-pi, pi, 0.39268)]
+az_list = [float(x) for x in pl.frange(0, 2*pi , 0.39268)]
+print(alt_list, az_list)
 
-print(distance(a,b))
+for a, b in zip(alt_list, az_list):
+
+	print(distance((a,b), (0,0)))

@@ -31,6 +31,7 @@ def verify_config(config_filename):
 	if not os.path.isfile(config_filename):
 		print (config_filename,": no such file found")
 		my_abort()
+
 def verify_ra_dec(ra, dec):
 	''' Verify given parameters: ra and dec are within their respective ranges '''
 	if ra > 2*math.pi or ra < 0:
@@ -60,9 +61,6 @@ def abreviated_str_to_ms(s):
 		my_abort()
 		return
 	return count
-
-
-
 
 if __name__ == '__main__':
 	

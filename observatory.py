@@ -2,6 +2,11 @@ import copy
 import ephem
 import yaml
 import pyproj
+from pprint import pprint
+import inspect
+def peek(x):
+    """ quick helper util to know wtf is happening with these ephem objects"""
+    pprint(inspect.getmembers(x))
 
 
 class Observatory(ephem.Observer):
@@ -61,5 +66,5 @@ class Observatory(ephem.Observer):
 
     # sloppy override due to pyephems use of x.copy() not copy(x)
     def copy(self):
-        cpyobj = type(self)(self.config_filename)
-        return cpyobj
+        ob = Observatory(self.config_filename)
+        return ob
