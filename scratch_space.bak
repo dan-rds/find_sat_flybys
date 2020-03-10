@@ -134,3 +134,71 @@ def calc_min_dist_to_beam_in_window(start_date, end_date, sat, observatory, targ
   #     interested_keys = ['_dec','_epoch','_pa','_pmdec','_pmra','_ra','_ratio','_spect','a_dec','a_epoch','a_ra','alt','az',
   # 'dec','elong','g_dec','g_ra','mag','name','neverup','parallactic_angle',
   # 'ra','radius','rise_az','rise_time','set_az','set_time','size','transit_alt','transit_time',]
+
+
+
+# class PtidSample(object):
+#   """docstring for PtidSample"""
+#   def __init__(self, observatory, sat, target_timesample):
+#       super(PtidSample, self).__init__()
+#       tmp_time = copy.copy(observatory.date)
+#       time = target_timesample['ts']
+#       observatory.date = time
+#       sat.compute(observatory)
+#       self.pt_a = (sat.alt, sat.az)
+#       self.dist_a_target = dist(a=self.pt_a, b=target_altaz)
+        
+
+#       observatory.date = (time+datetime.timedelta(milliseconds=5))
+#       sat.compute(observatory)
+
+#       self.pt_b = (sat.alt, sat.az)
+#       self.dist_b_target = dist(a=self.pt_b, b=target_altaz)
+
+#       observatory.date = tmp_time
+
+
+#   def positive_slope(self):
+#       print(self.dist_b_target, self.dist_a_target)
+#       return self.dist_b_target > self.dist_a_target
+
+def get_points(observatory, sat, time, time_delta_ms):
+    observatory.date = time
+    sat.compute(observatory)
+    pt_a = (sat.ra, sat.dec)
+
+    observatory.date = (time+datetime.timedelta(milliseconds=time_delta_ms))
+    sat.compute(observatory)
+
+    sat.compute(observatory)
+    pt_b = (sat.ra, sat.dec)
+
+    return pt_a, pt_b
+
+        time = target['ts']
+        print(time)
+        observer.time = time
+        sat.compute(observer)
+        sat_aa = (sat.alt, sat.az)
+        print(sat_aa)
+
+
+        # def dist(alt_a=None, az_a=None, alt_b=None, az_b=None, a=None, b=None):
+#   # TODO, check crossing meridian!!
+#   # TODO, really do that ^^
+#   if a:
+#       alt_a, az_a = a
+#   if b:
+#       alt_b, az_b = b
+
+#   # if az_a > ephem.degrees(math.pi) 
+#   # if az_a > ephem.degrees(math.pi):
+#   #   az_a = ephem.degrees(2*math.pi) - az_a
+#   # if az_b > ephem.degrees(math.pi):
+#   #   az_b = ephem.degrees(2*math.pi) - az_b
+
+#   dist = math.sqrt((alt_a-alt_b)**2+ (az_a-alt_b)**2)
+
+
+
+    # return dist

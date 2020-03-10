@@ -71,15 +71,20 @@ def create_target_position_series(observatory, start_time_utc, duration_ms, targ
     series = []
     # TODO, calc better time step size
     start = start_time_utc
+    now = observatory.date
+    print(observatory.date)
+    # start += datetime.timedelta(minutes=230) #todo rm
     interested_keys = ['_dec','_ra','a_dec','a_epoch','a_ra','alt','az','dec','elong','neverup','ra',
     'radius','rise_az','rise_time','set_az','set_time','transit_alt','transit_time',]
     # TODO, calc better time step size
-    for ms in range(0, int(duration_ms)):
-        observatory.date = start + datetime.timedelta(milliseconds=ms)
+    for ms in range(0, 2000): # change back, benn fucking with the step size
+        observatory.date = start + datetime.timedelta(minutes=ms)
+       # observatory.date = start + datetime.timedelta(seconds=ms)
         target_body.compute(observatory)
-        peek(target_body)
+      #  print(target_body.alt, target_body.az, ms)
         d = {x: target_body.__getattribute__(x) for x in interested_keys}
-        d["ts"] = start + datetime.timedelta(milliseconds=ms)
+        d["ts"] = observatory.date
+
         series.append(d)
     observatory.date = start_time_utc #cant be too careful
     return series
@@ -113,15 +118,27 @@ def run(config_filename, start_time_utc,
     observatory.date = ephem.Date(start_time_utc)
     
 
-    end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
+   # end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
     tles_dict = read_tle_file()
 
     target_body.compute(observatory)
     target_series = create_target_position_series(observatory, start_time_utc, duration_ms, target_body)
-    print(target_series[0])
+   # print(target_series[0])
 
     never_up_count = 0
     #means = []
+
+    # BEGIN TEST CODE
+    tle = tles_dict["ISS (ZARYA)"]
+    print(tle)
+    sat = ephem.readtle("ISS (ZARYA)", tle[0], tle[1])
+    sat.compute(observatory)
+    closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_body=target_body, target_timeseries=target_series)
+    if closest_pass_dist:
+        print("_____CLOSEST PASS DIST: ", closest_pass_dist)
+    
+    return 
+    # END TEST CODE
 
     for name, tle in tles_dict.items():
         sat = ephem.readtle(name, tle[0], tle[1])
@@ -131,9 +148,10 @@ def run(config_filename, start_time_utc,
         sat_ever_rises = False
         try:  # Don't add satellites that are never up
             start_val = observatory.next_pass(sat)
-            closest_pass_dist = ptid.ptid(observatory, sat, target, start_time_utc, end, target_)
-            print("_____CLOSEST PASS DIST: ", closest_pass_dist)
+            closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_body = target_body, target_timeseries=target_series)
+            if closest_pass_dist:
+                print("_____CLOSEST PASS DIST: ", closest_pass_dist)
         except ValueError:
             never_up_count += 1
-        break
+     #   break # TODO, rm line
 
