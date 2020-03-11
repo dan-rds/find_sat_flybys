@@ -61,6 +61,10 @@ class Observatory(ephem.Observer):
         output.append("\t\tlon: " + str(self.lon))
         output.append("\t\talt: " + str(self.alt))
         output.append("beam width in arcmin: " + str(self.beam_width_arcmin))
+        if self.date:
+            output.append("\tDate: " + str(self.date))
+        else:
+            output.append("\tDate: None")
         output.append("-----------")
         return '\n'.join(output)
 

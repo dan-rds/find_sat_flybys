@@ -12,6 +12,7 @@ import datetime
 # TODO use from blimpy.ephemeris import Observatory
 from pprint import pprint
 import inspect
+import copy
 import ephem
 from observatory import Observatory
 
@@ -62,9 +63,9 @@ def create_target_position_series(observatory, start_time_utc, duration_ms, targ
     interested_keys = ['_dec','_ra','a_dec','a_epoch','a_ra','alt','az','dec','elong','neverup','ra',
     'radius','rise_az','rise_time','set_az','set_time','transit_alt','transit_time',]
     # TODO, calc better time step size
-    for ms in range(0, 1200): # change back, benn fucking with the step size
-       # observatory.date = start + datetime.timedelta(minutes=ms)
+    for ms in range(0, int(duration_ms//10)): # change back, benn fucking with the step size
         observatory.date = start + datetime.timedelta(seconds=ms)
+      #  observatory.date = start + datetime.timedelta(seconds=ms)
         target_body.compute(observatory)
       #  print(target_body.alt, target_body.az, ms)
         d = {x: target_body.__getattribute__(x) for x in interested_keys}
@@ -72,6 +73,7 @@ def create_target_position_series(observatory, start_time_utc, duration_ms, targ
 
         series.append(d)
     observatory.date = start_time_utc #cant be too careful
+    print(observatory.date)
     return series
 
 def run(config_filename, start_time_utc,
@@ -99,6 +101,7 @@ def run(config_filename, start_time_utc,
     vcp(target_body)
 
     observatory.date = ephem.Date(start_time_utc)
+
     
 
    # end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
@@ -107,54 +110,36 @@ def run(config_filename, start_time_utc,
     target_body.compute(observatory)
     target_series = create_target_position_series(observatory, start_time_utc, duration_ms, target_body)
    # print(target_series[0])
-
+    tmp_time = copy.copy(observatory.date)
     never_up_count = 0
-    #means = []
 
-    '''
-    # BEGIN TEST CODE
-    tle = tles_dict["ISS (ZARYA)"]
-    print(tle)
-    sat = ephem.readtle("ISS (ZARYA)", tle[0], tle[1])
-    sat.compute(observatory)
-    closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_body=target_body, target_timeseries=target_series)
-    if closest_pass_dist:
-        print("_____CLOSEST PASS DIST: ", closest_pass_dist)
-    
-    return 
-    # END TEST CODE
-    '''
-    break_count = 50
-
+    # break_count = 50
+    diatances = []
+    l = 0
     for name, tle in tles_dict.items():
-        if break_count == 0:
-            break
+        # if break_count == 0:
+        #     break
+       # print(observatory.date == tmp_time, observatory.date, tmp_time)
+        observatory.date = tmp_time
         sat = ephem.readtle(name, tle[0], tle[1])
         # CAUTION with observatory times and copies
         sat.compute(observatory)
 
         sat_ever_rises = False
         try:  # Don't add satellites that are never up
-            # start_val = observatory.next_pass(sat)
+            #o = observatory.copy()
+           # print(observatory.date)
+         #   start_val = observatory.next_pass(sat)
+          #  print(start_val)
+            
             closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_body = target_body, target_timeseries=target_series)
-            break_count -= 1
-            if closest_pass_dist:
-                print("_____CLOSEST PASS DIST: ", closest_pass_dist)
+            l += 1
+            print(sat)
+            diatances.append(closest_pass_dist)
         except ValueError:
             never_up_count += 1
 
         
-     #   break # TODO, rm line
+    print(diatances)
+    print(l)
 
-
-    # # BEGIN TEST CODE
-    # tle = tles_dict["ISS (ZARYA)"]
-    # print(tle)
-    # sat = ephem.readtle("ISS (ZARYA)", tle[0], tle[1])
-    # sat.compute(observatory)
-    # closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_body=target_body, target_timeseries=target_series)
-    # if closest_pass_dist:
-    #     print("_____CLOSEST PASS DIST: ", closest_pass_dist)
-    
-    # return 
-    # # END TEST CODE
