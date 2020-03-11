@@ -60,6 +60,10 @@ def abreviated_str_to_ms(s):
 		print(s, ": bad time string. Should only contain one char (h,m or s)")
 		my_abort()
 		return
+
+	if count > 2400000: #40 minutes
+		print("Observation duration too long, must be <= 40 minutes")
+		my_abort()
 	return count
 
 if __name__ == '__main__':

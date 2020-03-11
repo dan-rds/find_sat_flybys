@@ -19,12 +19,14 @@ Cleanup:
 - Write a better readme
 - rename repo
 - ~~Proper docstrings~~
+- Take care of `#TODO`s
 - Proper docstrings for PTID
+
 
 Speedup:
 - ~~Peak-trough-incline-decline algorithm prelim catagorization~~
-- Peak-trough-incline-decline algorithm recursive part
-- PTID algorithm edge cases where obs window is longer than orbit
+- ~~Peak-trough-incline-decline algorithm recursive part~~
+- ~~PTID algorithm edge cases where obs window is longer than orbit~~
 - ~~Look into caching~~
 - ~~Think about multipe targets in single run (cost effective??)~~
 
@@ -39,5 +41,9 @@ Caching tles:
 3/4/2020: 
 - Running `$ time pos_calc.py` yields `user	0m12.801s`. Much faster than previous iteration, simply checking the `ephem.Body.next_rising` field
 - Arg parser workin like a dream
+
 3/9/2020: 
 - distance function working after much head scratching
+
+3/11:
+- Rough implementation of ptid. 20x speedup increase! `time` yeilds `user 0m0.624s`
