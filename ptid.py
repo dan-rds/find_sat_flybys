@@ -1,36 +1,44 @@
-"""
-ptid Peak-Trough-Incline-Decline algorithm
+'''
+-------------------------------------
+ptid.py
+find_sat_flybys
 
-"""
+    ptid Peak-Trough-Incline-Decline algorithm. 
+    Ptid finds the basic characteristics of the polynomial 
+    f(t) =: distance between target's (alt, az) and the sat's (alt, az) at time t.
+    It does thi_indexs in log(n) time by sampling the the beginning and end of the polynomial to 
+    determine the slope of the polynomial at those points. If the polynimoal represents a 
+    trough, PTID will run the sampling recursivly until a minima is found.
+
+    See PTID_proof.pdf for the proof
+
+    by Daniel Richards (github.com/dan-rds)
+    Copyright 2020 Daniel Richards. All rights reserved.
+--------------------------------------
+''' 
 
 import datetime
 import copy
 import math
 import inspect
-from math import pi
+
 import ephem
 from pprint import pprint
 from typing import Tuple, Type
 from observatory import Observatory
 from target_timeseries import TargetTimeSeries
+from dev_utils import sanity_check, peek
 
-
-extrema_pt = None
-
-
-def peek(x):
-    """ quick helper util to know wtf is happening with these ephem objects"""
-    pprint(inspect.getmembers(x))
-
-
-def distance(a_coord: Tuple[float, float], b_coord: Tuple[float, float]) -> float:
+from math import pi
+import math
+def distance(a_coord, b_coord) -> float:
     ''' Angular distance between two points '''
     a_alt, a_az = a_coord
     b_alt, b_az = b_coord
 
-    if a_az < 0 or b_az < 0:
+    if a_az < 0 or b_az < 0: # 
         raise ValueError
-    if abs(a_alt) > pi or abs(b_alt) > pi:
+    if abs(a_alt) > pi or abs(b_alt) > pi: 
         raise ValueError
     az_diff = abs(a_az - b_az)
     if az_diff > pi:
@@ -40,150 +48,102 @@ def distance(a_coord: Tuple[float, float], b_coord: Tuple[float, float]) -> floa
 
     dist = math.sqrt(alt_diff**2 + az_diff**2)
     return dist
+extrema_pt = None
 
 
-def is_increasing_slope(left_index: int, right_index: int,
-                        observatory: Type[Observatory],
-                        sat: Type[ephem.Body],
-                        target_timeseries: Type[TargetTimeSeries]) -> Tuple[bool, float]:
 
-    left_aa, left_sampletime = target_timeseries.get_target_aa(left_index)
-    right_aa, right_sampletime = target_timeseries.get_target_aa(right_index)
+def ptid(observatory: Type[Observatory], sat: Type[ephem.Body], target_timeseries: Type[TargetTimeSeries]):
+    ''' 
+    ptid Peak-Trough-Incline-Decline algorithm.
+    See PTID_proof.pdf for details on the algorithm
+    Args:
+        observarory (Observatory): Where observation is taking place
+        sat (ephem.Body): A satellite's orbital body made from tle 
+        target_timeseries (TargetTimeSeries): target alt, az lookup
+    Returns:
+        # TODO
+    '''
+    extrema_pt = None # used for plotting
 
-    observatory.date = left_sampletime
+    def is_minima_index(mid_index: int) -> (bool, float):
+        ''' Checks points to right and left of mid_index to see if it is a local minima '''
 
-    sat.compute(observatory)
-    sat_aa = (sat.alt, sat.az)
-    dist_sat_to_left_sample = distance(a_coord=sat_aa, b_coord=left_aa)
+        left_slope, left_val = is_increasing_slope(left_index=mid_index - 1, right_index=mid_index)
+        right_slope, right_val = is_increasing_slope(left_index=mid_index, right_index=mid_index + 1)
+        found_minima = (left_slope == False and right_slope == True)
+        return found_minima, min(left_val, right_val)
 
-    observatory.date = right_sampletime
-    sat.compute(observatory)
-    sat_aa = (sat.alt, sat.az)
-    dist_sat_to_right_sample = distance(a_coord=sat_aa, b_coord=right_aa)
+    def is_increasing_slope(left_index: int, right_index: int) -> Tuple[bool, float]:
+        ''' 
+            Calculates if slope is increasing between left_index and right_index where 
+            f(t) =: distance between target's (alt, az) and the sat's (alt, az) at time t.
+            See readme for details on the algorithm
+            Args:
+                left_index (int): First index to lookup in the timeseries 
+                right_index (int): Second index to lookup in the timeseries 
+            Returns:
+                is_increasing (bool): If f(t) is increasing
+                min_value (float): The minimum value of the two points
+                
+        '''
+  
 
-    return dist_sat_to_left_sample < dist_sat_to_right_sample, min(
-        dist_sat_to_left_sample, dist_sat_to_right_sample)
+        left_aa, left_sampletime = target_timeseries.get_target_aa(left_index)
+        right_aa, right_sampletime = target_timeseries.get_target_aa(right_index)
 
-
-def sanity_check(observatory, sat, target_timeseries,
-                 color='b--', min_to_draw=None):
-    import matplotlib.pyplot as plt
-    global extrema_pt
-
-    dist_list = []
-    tar_list = []
-    sat_list = []
-
-    start = target_timeseries.start_datetime
-    target = target_timeseries.target_body
-
-    dt = None
-    for i in range(target_timeseries.len()):
-        dt = datetime.timedelta(seconds=i)
-        observatory.date = start + dt
+        observatory.date = left_sampletime
 
         sat.compute(observatory)
-        target.compute(observatory)
         sat_aa = (sat.alt, sat.az)
+        dist_sat_to_left_sample = distance(a_coord=sat_aa, b_coord=left_aa)
 
-        tar_aa = (target.alt, target.az)
-        d = distance(a_coord=sat_aa, b_coord=tar_aa)
-        dist_list.append(d)
+        observatory.date = right_sampletime
+        sat.compute(observatory)
+        sat_aa = (sat.alt, sat.az)
+        dist_sat_to_right_sample = distance(a_coord=sat_aa, b_coord=right_aa)
 
-        sat_list.append(sat_aa)
-
-    plt.figure()
-    plt.title(sat.name)
-    print(dt)
-
-    if min_to_draw:
-        print("MTD=", min_to_draw)
-        plt.axhline(y=min_to_draw, color='r', linestyle='-')
-        plt.axhline(y=extrema_pt[1], color='b', linestyle='--')
-        plt.axvline(x=extrema_pt[0], color='b', linestyle='--')
-        #plt.scatter(extrema_pt[0], extrema_pt[1], s=200)
-    plt.plot(dist_list, color)
-    plt.ylabel('Distache to target')
-    plt.show()
+        is_increasing = dist_sat_to_left_sample < dist_sat_to_right_sample
+        min_value = min(dist_sat_to_left_sample, dist_sat_to_right_sample)
+        return is_increasing, min_value
 
 
-def is_minima_index(mid_index: int,
-                    observatory: Type[Observatory],
-                    sat: Type[ephem.Body],
-                    target_timeseries: Type[TargetTimeSeries]) -> (bool, float):
+    def ptid_recursive(lo_index, hi_index) -> float:
+        ''' 
+            Recursive part of the ptid algorithm. See Ptid_Proof.latex for more info
+            Args:
+                lo_index (int): The lower bound to check 
+                hi_index (int): The higher bound to check 
+            Returns:
+                (float): minimim value of f(t)[lo_index:hi_index]
+        '''
+        
 
-    left_slope, left_val = is_increasing_slope(left_index=mid_index - 1,
-                                               right_index=mid_index,
-                                               observatory=observatory,
-                                               sat=sat,
-                                               target_timeseries=target_timeseries)
-    right_slope, right_val = is_increasing_slope(left_index=mid_index,
-                                                 right_index=mid_index + 1,
-                                                 observatory=observatory,
-                                                 sat=sat,
-                                                 target_timeseries=target_timeseries)
-    found_minima = (left_slope == False and right_slope == True)
-    return found_minima, min(left_val, right_val)
+        mid_index = lo_index + (hi_index - lo_index) // 2
 
+        break_cond, distance = is_minima_index(mid_index=mid_index)
+        if break_cond or mid_index == hi_index or mid_index == lo_index:
+            extrema_pt = (mid_index, distance)
+            return distance
 
-def ptid_rec(lo, hi, observatory, sat, target_timeseries) -> float:
-    global extrema_pt
+        mid_positive_slope, val = is_increasing_slope(left_index=mid_index, right_index=mid_index + 1)
+        if mid_positive_slope:
+            rec_val = ptid_recursive(lo_index, mid_index)
+        else:
+            rec_val = ptid_recursive(mid_index + 1,hi_index)
+        return min(rec_val, val)
 
-    mid_index = lo + (hi - lo) // 2
+    #Resume PTID algorithm funcion
 
-    break_cond, distance = is_minima_index(
-        mid_index=mid_index, observatory=observatory, sat=sat, target_timeseries=target_timeseries)
-    if break_cond or mid_index == hi or mid_index == lo:
-        #print("MINIMA dist = ", distance)
-        extrema_pt = (mid_index, distance)
-
-        return distance
-
-    mid_positive_slope, val = is_increasing_slope(
-        left_index=mid_index, right_index=mid_index + 1, observatory=observatory, sat=sat, target_timeseries=target_timeseries)
-    if mid_positive_slope:
-        rec_val = ptid_rec(lo, mid_index, observatory, sat, target_timeseries)
-    else:
-        rec_val = ptid_rec(
-            mid_index + 1,
-            hi,
-            observatory,
-            sat,
-            target_timeseries)  # todo rm +1??
-#	print(min(rec_val, val), rec_val, val,  type(min(rec_val, val)))
-    return min(rec_val, val)
-
-
-def ptid(observatory, sat, target_timeseries):
-    #observatory = Observatory('config.yaml')
-
-    start_positive_slope, start_min = is_increasing_slope(
-        left_index=0, right_index=1, observatory=observatory, sat=sat, target_timeseries=target_timeseries)
-    end_positive_slope, end_min = is_increasing_slope(
-        left_index=-2, right_index=-1, observatory=observatory, sat=sat, target_timeseries=target_timeseries)
+    start_positive_slope, start_min = is_increasing_slope(left_index=0, right_index=1)
+    end_positive_slope, end_min = is_increasing_slope(left_index=-2, right_index=-1)
 
     peak_val = float('inf')
 
     if start_positive_slope == False != end_positive_slope == True:
-
-        
-        peak_val = ptid_rec(
-            0,
-            (target_timeseries.len() - 1),
-            observatory,
-            sat,
-            target_timeseries)
-        print("Peak", sat.name, peak_val)
-        # if peak_val < min(end_min, start_min):
-        # sanity_check(
-        #     observatory=observatory,
-        #     sat=sat,
-        #     target_timeseries=target_timeseries,
-        #     min_to_draw=min(
-        #         peak_val,
-        #         end_min,
-        #         start_min),
-        #     color='g-')
-
-    #sanity_check(observatory=observatory, sat=sat, target_timeseries=target_timeseries)
+        peak_val = ptid_recursive(0,(target_timeseries.len() - 1))
+        print("Trough", sat.name, peak_val)
+        sanity_check(observatory=observatory, 
+                    sat=sat, 
+                    target_timeseries=target_timeseries, 
+                    extrema_pt=extrema_pt)
     return min(peak_val, end_min, start_min)
