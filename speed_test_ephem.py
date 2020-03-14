@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 '''-------------------------------------
 speed_test_ephem.py
-messin_with_tles
+find_sat_flybys
 
 
     by Daniel Richards (github.com/dan-rds)

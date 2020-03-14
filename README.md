@@ -1,4 +1,4 @@
-# messin_with_tles
+# find_sat_flybys
 
 
 ** WORK IN PROGRESS. THis document is intended for internal use only. **
@@ -11,13 +11,14 @@ Buildout script functionality:
 - ~~convert engligh times to ms (12m -> 720000)~~
 - ~~config file reading~~ and error messages 
 - requirements.txt or setup.py
-- use update tle
+- Install
+- use cache
 
 Cleanup:
 - ~~Extend ephem.observer to allow for other params~~ 
 - Figure out hat to do w/ beam-width and buffer zone (sidelobes??)
 - Write a better readme
-- rename repo
+- ~~rename repo~~
 - ~~Proper docstrings~~
 - Take care of `#TODO`s
 - Proper docstrings for PTID
@@ -29,12 +30,19 @@ Speedup:
 - ~~PTID algorithm edge cases where obs window is longer than orbit~~
 - ~~Look into caching~~
 - ~~Think about multipe targets in single run (cost effective??)~~
+- Write hashmap wrapper for targettimeseries
+- Compare ^^ to iterative list[hasmap] creation
+- Integrate wrapper for targettimeseries
 
 Caching tles:
 - Find way to get old tles
 - Write lru cache data to cache metadata file (reads, writes, evict) 
 - Check cache -> in cache ? yield file : query db to file, yield file
 - Cache settings file 
+
+Testing
+- hookup travis
+- Write main test for pos calc
 
 
 ## Progress:
@@ -46,4 +54,4 @@ Caching tles:
 - distance function working after much head scratching
 
 3/11:
-- Rough implementation of ptid. 20x speedup increase! `time` yeilds `user 0m0.624s`
+- Rough implementation of ptid. **20x speedup increase!** `time` yeilds `user 0m0.624s`
