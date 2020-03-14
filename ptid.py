@@ -142,8 +142,8 @@ def ptid(observatory: Type[Observatory], sat: Type[ephem.Body], target_timeserie
     if start_positive_slope == False != end_positive_slope == True:
         peak_val = ptid_recursive(0,(target_timeseries.len() - 1))
         print("Trough", sat.name, peak_val)
-        sanity_check(observatory=observatory, 
-                    sat=sat, 
-                    target_timeseries=target_timeseries, 
-                    extrema_pt=extrema_pt)
+       # sanity_check(observatory=observatory, 
+                    # sat=sat, 
+                    # target_timeseries=target_timeseries, 
+                    # extrema_pt=extrema_pt)
     return min(peak_val, end_min, start_min)

@@ -16,12 +16,12 @@ Buildout script functionality:
 
 Cleanup:
 - ~~Extend ephem.observer to allow for other params~~ 
-- Figure out hat to do w/ beam-width and buffer zone (sidelobes??)
+- ~~Figure out hat to do w/ beam-width and buffer zone (sidelobes??)~~ Not caring about this for now bc it's plenty fast so I dont need to optimize
 - Write a better readme
 - ~~rename repo~~
 - ~~Proper docstrings~~
-- Take care of `#TODO`s
-- Proper docstrings for PTID
+- ~~Take care of `#TODO`s~~
+- ~~Proper docstrings for PTID~~
 
 
 Speedup:
@@ -30,9 +30,9 @@ Speedup:
 - ~~PTID algorithm edge cases where obs window is longer than orbit~~
 - ~~Look into caching~~
 - ~~Think about multipe targets in single run (cost effective??)~~
-- Write hashmap wrapper for targettimeseries
-- Compare ^^ to iterative list[hasmap] creation
-- Integrate wrapper for targettimeseries
+- ~~Write hashmap wrapper, targettimeseries~~
+- ~~Compare ^^ to iterative list[hasmap] creation~~ Kicks ass
+- ~~Integrate wrapper for targettimeseries~~
 
 Caching tles:
 - Find way to get old tles
@@ -42,8 +42,12 @@ Caching tles:
 
 Testing
 - hookup travis
-- Write main test for pos calc
-
+- Write main test for:
+	- poscalc
+	- target_timeseries
+	- observatory
+	- ptid
+	- parser
 
 ## Progress:
 3/4/2020: 
@@ -55,3 +59,6 @@ Testing
 
 3/11:
 - Rough implementation of ptid. **20x speedup increase!** `time` yeilds `user 0m0.624s`
+
+3/14:
+- Targettimeseries speeds up runtime to ```user	0m0.458s``` but much better on memory as samplerate increases

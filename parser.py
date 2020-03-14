@@ -78,7 +78,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("-d", "--duration", type=str, action="store", dest='duration',required=True,
 	                    help="How long will target be observed. Use abbreviated string i.e. 12m, 0.5h, 90s etc.")
-	# TODO, add freq for beam-haflwidth calc
+
 
 	parser.add_argument("-v", "--verbose", action="store_true", default=False,
 	                    help="increase output verbosity")
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 	verify_ra_dec(target_dec, target_ra)
 
 	start_time_utc = args['start_utc']
-	# TODO, catch case where start is too far from now and tles are screwed up
+
 	duration_str = args['duration']
 	duration_ms = abreviated_str_to_ms(duration_str)
 
