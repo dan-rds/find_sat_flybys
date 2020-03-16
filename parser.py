@@ -74,7 +74,7 @@ if __name__ == '__main__':
 	parser.add_argument("-dec", "--declination", type=float, required=True,
 	                    help="Declination of observation's target (radians)")
 	parser.add_argument("-s", "--start", type=int, action="store", dest='start_utc', default=datetime.datetime.utcnow(),
-	                    help="UTC timestamp for the start of the observation of target")
+	                    help="UTC timestamp for the start of the observation of target") #TODO I dont think this is right
 
 	parser.add_argument("-d", "--duration", type=str, action="store", dest='duration',required=True,
 	                    help="How long will target be observed. Use abbreviated string i.e. 12m, 0.5h, 90s etc.")

@@ -10,7 +10,7 @@ Buildout script functionality:
 - ~~getopt~~
 - ~~convert engligh times to ms (12m -> 720000)~~
 - ~~config file reading~~ and error messages 
-- requirements.txt or setup.py
+- ~~requirements.txt or setup.py~~
 - Install
 - use cache
 
