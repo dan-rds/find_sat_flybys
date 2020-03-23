@@ -109,7 +109,7 @@ if __name__ == '__main__':
 	verify_config(config_filename)
 
 	beam_radius = args['beam_radius']
-	print(type(start_time_utc))
+	#print(type(start_time_utc))
 	pos_calc.run(config_filename=config_filename, target_ra=target_ra, target_dec=target_dec, v_flag=verbose, start_time_utc=start_time_utc, duration_ms=duration_ms, beam_radius=beam_radius)
 
 

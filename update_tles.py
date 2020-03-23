@@ -39,7 +39,5 @@ def check_tles_current() -> bool:
 
 def update_tles_if_needed():
     if not check_tles_current():
-        update_tles
+        update_tles()
    
-if __name__ == '__main__':
-    update_tles_if_needed()

@@ -16,8 +16,9 @@ import copy
 import ephem
 from observatory import Observatory
 from target_timeseries import TargetTimeSeries
-
+import update_tles
 import ptid
+from termcolor import colored
 
 
 verbose = False
@@ -54,7 +55,7 @@ def read_tle_file() -> dict:
 
     return tles_dict
 
-
+#TODO where should I put beam width??
 def run(config_filename, start_time_utc,
         duration_ms, target_ra, target_dec, beam_radius, v_flag):
     global verbose
@@ -71,8 +72,9 @@ def run(config_filename, start_time_utc,
     """
     verbose = v_flag
     observatory = Observatory(config_filename)
+    update_tles.update_tles_if_needed()
+    #start_time_utc = datetime.datetime.strptime('2020/3/12 17:37:15', "%Y/%m/%d %H:%M:%S")
 
-    start_time_utc = datetime.datetime.strptime('2020/3/12 17:37:15', "%Y/%m/%d %H:%M:%S")
 
     observatory.date = ephem.Date(start_time_utc)
     target_timeseries= TargetTimeSeries(observatory=observatory,  duration_ms=duration_ms,start_datetime=start_time_utc, target_ra_dec=(target_ra, target_dec))
@@ -80,6 +82,9 @@ def run(config_filename, start_time_utc,
     
    # end = start_time_utc + datetime.timedelta(milliseconds=10) # TODO ms=2 just for testing
     tles_dict = read_tle_file()
+
+    flybys = []
+    in_beam = []
 
     tmp_time = copy.copy(observatory.date)
  
@@ -91,6 +96,17 @@ def run(config_filename, start_time_utc,
         sat.compute(observatory)
 
         closest_pass_dist = ptid.ptid(observatory=observatory, sat=sat, target_timeseries=target_timeseries)
-     
-    target_timeseries.cache_hitrate()
+        if closest_pass_dist <= observatory.beam_proximity_buffer_radians:
+            if closest_pass_dist <= observatory.beam_width_radians:
+                in_beam.append((sat.name, closest_pass_dist))
+            else:
+                flybys.append((sat.name, closest_pass_dist))
+
+    print("Sats in beams: ", len(in_beam))
+    for sat, dist in in_beam:
+        print("\t", sat, "   minimum distance:",colored(dist, 'red'))
+    print("Sats in proximity: ", len(flybys))
+    for sat, dist in flybys:
+        print("\t", sat, "   minimum distance:",colored(dist, 'yellow'))
+
 

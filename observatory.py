@@ -4,6 +4,7 @@ import yaml
 import pyproj
 from pprint import pprint
 import inspect
+from math import pi
 def peek(x):
     """ quick helper util to know wtf is happening with these ephem objects"""
     pprint(inspect.getmembers(x))
@@ -35,6 +36,10 @@ class Observatory(ephem.Observer):
         self.z = file_contents['z']
 
         self.beam_width_arcmin = file_contents["beam_width_arcmin"]
+        self.beam_width_radians = self.beam_width_arcmin*(pi/(60*180))
+
+        self.beam_proximity_buffer = file_contents["beam_proximity_buffer"]
+        self.beam_proximity_buffer_radians = self.beam_proximity_buffer*(pi/(60*180))
 
         # converting xyz -> lla
         ecef = pyproj.Proj(proj='geocent', ellps='WGS84', datum='WGS84')
