@@ -9,8 +9,18 @@ from pprint import pprint
 from typing import Tuple, Type
 from observatory import Observatory
 from target_timeseries import TargetTimeSeries
+import datetime
+from datetime import timezone
 
 extrema_pt = None
+
+def get_utc_now() -> datetime:
+    ''' gets datetime object without local timezone '''
+    d = datetime.datetime.utcnow()
+    epoch = datetime.datetime(1970,1,1)
+    t = (d - epoch).total_seconds()
+    return datetime.datetime.fromtimestamp(t, timezone.utc)   
+
 
 def peek(x):
     """ quick helper util to know wtf is happening with these ephem objects"""
