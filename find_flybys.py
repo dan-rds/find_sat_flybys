@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 '''
-parser.py
+find_flybys.py
 
 A fleshed out implementation of argparger with checks for input error.
 
@@ -30,31 +30,33 @@ def valid_time(timestamp):
 	delta = (now - time_to_check).total_seconds()
 	if delta > week:
 		print("Start time of observation is more than a week from now. This program cannot handle this yet.")
-		my_abort()
+		raise ValueError 
 
-def my_abort():
+def my_abort() :
 	''' Abort helper, added 'my' for namespace disambiguation '''
 	global verbose
 	if verbose:
 		print("Aborting, exit 1")
 	
 		return
+	raise ValueError 
 	#TODO abourt correctly
 
 def verify_config(config_filename):
 	''' Verify given parameter: config_file exists '''
 	if not os.path.isfile(config_filename):
 		print (config_filename,": no such file found")
-		my_abort()
+		raise ValueError 
 
 def verify_ra_dec(ra, dec):
+ 
 	''' Verify given parameters: ra and dec are within their respective ranges '''
 	if ra > 2*math.pi or ra < 0:
 		print ("Bad right ascension value. ra (in radians) must be between 0 and 2pi")
-		my_abort()
+		raise ValueError 
 	if dec > math.pi or dec < 0:
 		print ("Bad declination value. dec (in radians) must be between 0 and pi")
-		my_abort()
+		raise ValueError 
 
 def abreviated_str_to_ms(s):
 	''' Convert time string like '12m' to ms. Also format checking'''
@@ -62,8 +64,8 @@ def abreviated_str_to_ms(s):
 	count = float(''.join([i for i in s if i.isdigit()]))
 	if len(unit) != 1:
 		print(s, ": bad time string. Should only contain one char (h,m or s)")
-		my_abort()
-		return
+		raise ValueError 
+
 
 	if unit == 'h':
 		count *= 3600000
@@ -73,12 +75,12 @@ def abreviated_str_to_ms(s):
 		count *= 1000
 	else:
 		print(s, ": bad time string. Should only contain one char (h,m or s)")
-		my_abort()
+		raise ValueError 
 		return
 
-	if count > 2400000: #40 minutes
-		print("Observation duration too long, must be <= 40 minutes")
-		my_abort()
+	if count > 2520000: #40 minutes
+		print("Observation duration too long, must be <= 42 minutes")
+		raise ValueError 
 	return count
 
 if __name__ == '__main__':

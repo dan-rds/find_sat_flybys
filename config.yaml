@@ -8,8 +8,8 @@ z: 1280.0
 
 # beam_width_arcmin: the radius from target that is considered in the beam. 
 # Would have calculated it with the dish diameter and freq like sigproc but this is easier for interferometers 
-beam_width_arcmin: 4.0
+beam_width_arcmin: 10.0
 
 # beam_proximity_buffer: the distance from the target that if a sat is inside, the script will yeild a warning. 
-beam_proximity_buffer: 10.0
+beam_proximity_buffer: 20.0
 

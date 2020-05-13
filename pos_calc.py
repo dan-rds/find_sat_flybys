@@ -18,6 +18,7 @@ from observatory import Observatory
 from target_timeseries import TargetTimeSeries
 import update_tles
 import ptid
+import math
 from termcolor import colored
 
 
@@ -54,6 +55,9 @@ def read_tle_file() -> dict:
         line3 = f.readline().strip()
 
     return tles_dict
+
+def radians_to_arcmin(rad):
+    return rad *(60 * 180)/math.pi
 
 #TODO where should I put beam width??
 def run(config_filename, start_time_utc,
@@ -104,9 +108,9 @@ def run(config_filename, start_time_utc,
 
     print("Sats in beams: ", len(in_beam))
     for sat, dist in in_beam:
-        print("\t", sat, "   minimum distance:",colored(dist, 'red'))
+        print("\t", sat, "   closest distance:",colored("%.5f"%(radians_to_arcmin(dist)), 'red'), "arcmins")
     print("Sats in proximity: ", len(flybys))
     for sat, dist in flybys:
-        print("\t", sat, "   minimum distance:",colored(dist, 'yellow'))
+        print("\t", sat, "   closest distance:",colored("%.5f"%(radians_to_arcmin(dist)), 'yellow'), "arcmins")
 
 
