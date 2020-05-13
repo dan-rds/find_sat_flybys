@@ -12,6 +12,7 @@ The PTID algorithm takes the calculation of an individual satellite from O(t) to
 
 - Right now, the program is only able to check observation times at most a week from the time the script is run. This means it can't be used to check observations more than a week old. Likewise, it can't be used to check observation plans more than a week in the future. This is because, in it's current version, the program is using the celestrak database which just posts currently active, up-to-date TLEs. Spacetrak offers archival queries but they don't have a way to query only the actively transmitting TLEs. This means you would have to query 40 million TLEs and filter them. I'm talking so one of their site admins so hopefully we can find a solution. 
 
+- Beam width is a hard coded value in config.yaml. You can calculate it for single dish instruments using freq and dish diameter but for now its a hard coded value
 
 ## Note
 Because the potential user base is small for this project, I didn't do a ton of work on the UI. This was intentional, if you think I should make this a python module or really dial in the CLI or even make a REST api, let me know. Maybe a checker that takes in hdf5/fil files?
